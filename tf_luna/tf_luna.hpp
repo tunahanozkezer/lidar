@@ -38,6 +38,12 @@ enum class packet_id :uint8_t
 	ID_GET_CONFIG_PARA   =0x3F
 };
 
+enum class output_en_state :bool
+{
+	DISABLE       =0x00,
+	ENABLE        =0x01
+};
+
 struct uart_veri
 {
 	uint8_t p_veri[255];
@@ -54,7 +60,7 @@ public:
 
 
 	tf_luna(uint8_t deneme);
-	void  version_downward();
+	void  output_control(output_en_state state);
 	void version_upward();
 	QueueHandle_t tx_qu;
 	void parse_byte(queue<uint8_t> &data_qu);

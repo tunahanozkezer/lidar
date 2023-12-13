@@ -16,26 +16,28 @@ tf_luna::tf_luna(uint8_t deneme)
 	parse_state = parse_state_t::HEAD_1;
 }
 
-void  tf_luna::version_downward()
+void  tf_luna::output_control(output_en_state state)
 {
 	packet send_packet = {0};
-	uart_veri verileer = {0};
+	uint8_t *p_packet_to_send = NULL;
 
 	send_packet.head_u8 = 0x5A;
 	send_packet.len_u8 = 5;
 	send_packet.id_u8 = packet_id::ID_OUTPUT_EN;
-	send_packet.veri_u8[0] = 1;
+	send_packet.veri_u8[0] = static_cast<uint8_t>(state);
 	send_packet.chek_sum_u8 = 0;//calculate_checksum(send_packet);
 
-	*verileer.p_veri = send_packet.head_u8;
-	*(verileer.p_veri+1) = send_packet.len_u8;
-	*(verileer.p_veri+2) = static_cast<uint8_t>(send_packet.id_u8);
-	*(verileer.p_veri+3) = send_packet.veri_u8[0];
-	*(verileer.p_veri+4) = send_packet.chek_sum_u8;
+	p_packet_to_send = (uint8_t*)malloc(send_packet.len_u8);
 
-	verileer.veri_boyutu = send_packet.len_u8;
+	* p_packet_to_send = send_packet.head_u8;
+	*(p_packet_to_send+1) = send_packet.len_u8;
+	*(p_packet_to_send+2) = static_cast<uint8_t>(send_packet.id_u8);
+	*(p_packet_to_send+3) = send_packet.veri_u8[0];
+	*(p_packet_to_send+4) = send_packet.chek_sum_u8;
 
-	HAL_UART_Transmit_DMA(&huart2, verileer.p_veri, verileer.veri_boyutu);
+
+	HAL_UART_Transmit_DMA(&huart2, p_packet_to_send, send_packet.len_u8);
+	free(p_packet_to_send);
 //	xQueueSend(tx_qu, &verileer, 10);
 
 }
