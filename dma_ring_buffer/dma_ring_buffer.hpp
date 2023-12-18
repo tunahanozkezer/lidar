@@ -23,7 +23,7 @@ class dma_ring_buffer
 {
 public:
 	dma_ring_buffer(UART_HandleTypeDef *p_hdma_st, size_t dma_buf_size = DMA_BUFFER);
-	queue<uint8_t> veri_al();
+	void veri_al();
 	queue<uint8_t> data_qu;
 
 private:

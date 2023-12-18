@@ -20,7 +20,7 @@ dma_ring_buffer::dma_ring_buffer(UART_HandleTypeDef *p_hdma_st, size_t dma_buf_s
 }
 
 
-queue<uint8_t> dma_ring_buffer::veri_al()
+void dma_ring_buffer::veri_al()
 {
 	const  uint32_t head_u32 = dma_buf_size_u32 - uart_dma_st->hdmarx->Instance->NDTR;
 	static uint8_t yazilan_veri = 0;
@@ -57,5 +57,4 @@ queue<uint8_t> dma_ring_buffer::veri_al()
 		tail_u32 = head_u32;
 
 	}
-//	return data_qu;
 }

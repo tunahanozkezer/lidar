@@ -10,34 +10,31 @@
 #include "stdlib.h"
 #include "usart.h"
 
-tf_luna::tf_luna(uint8_t deneme)
+tf_luna::tf_luna(uint8_t deneme) : parse_state{parse_state_t::HEAD_1}
 {
-	tx_qu = xQueueCreate( 10, sizeof( uart_veri) );
-	parse_state = parse_state_t::HEAD_1;
+
 }
 
 void  tf_luna::output_control(output_en_state state)
 {
-	packet send_packet = {0};
-	uint8_t *p_packet_to_send = NULL;
+	packet send_packet(1);
 
-	send_packet.head_u8 = 0x5A;
-	send_packet.len_u8 = 5;
-	send_packet.id_u8 = packet_id::ID_OUTPUT_EN;
-	send_packet.veri_u8[0] = static_cast<uint8_t>(state);
+	send_packet.head_u8     = 0x5A;
+	send_packet.len_u8      = 5;
+	send_packet.id_u8       = packet_id::ID_OUTPUT_EN;
+	send_packet.data_u8[0]  = static_cast<uint8_t>(state);
 	send_packet.chek_sum_u8 = 0;//calculate_checksum(send_packet);
 
-	p_packet_to_send = (uint8_t*)malloc(send_packet.len_u8);
+	 std::unique_ptr<uint8_t[]> p_packet_to_send(new uint8_t[send_packet.len_u8]);
 
-	* p_packet_to_send = send_packet.head_u8;
-	*(p_packet_to_send+1) = send_packet.len_u8;
-	*(p_packet_to_send+2) = static_cast<uint8_t>(send_packet.id_u8);
-	*(p_packet_to_send+3) = send_packet.veri_u8[0];
-	*(p_packet_to_send+4) = send_packet.chek_sum_u8;
+	 p_packet_to_send[0] = send_packet.head_u8;
+	 p_packet_to_send[1] = send_packet.len_u8;
+	 p_packet_to_send[2] = static_cast<uint8_t>(send_packet.id_u8);
+	 p_packet_to_send[3] = send_packet.data_u8[0];
+	 p_packet_to_send[4] = send_packet.chek_sum_u8;
 
+	 HAL_UART_Transmit_DMA(&huart2, p_packet_to_send.get(), send_packet.len_u8);
 
-	HAL_UART_Transmit_DMA(&huart2, p_packet_to_send, send_packet.len_u8);
-	free(p_packet_to_send);
 //	xQueueSend(tx_qu, &verileer, 10);
 
 }
@@ -164,7 +161,7 @@ uint8_t tf_luna::calculate_checksum(const packet &packet_t)
 
 	for(int i = 0; i<packet_t.len_u8; i++)
 	{
-		calculated_checksum += packet_t.veri_u8[i];
+		calculated_checksum += packet_t.data_u8[i];
 	}
 	return calculated_checksum;
 

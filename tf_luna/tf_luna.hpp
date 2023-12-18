@@ -8,11 +8,10 @@
 #ifndef TF_LUNA_HPP_
 #define TF_LUNA_HPP_
 
-#include "stdint.h"
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "queue"
-
+#include <FreeRTOS.h>
+#include <queue.h>
+#include <queue>
+#include <memory>
 using namespace std;
 
 enum class packet_id :uint8_t
@@ -44,12 +43,6 @@ enum class output_en_state :bool
 	ENABLE        =0x01
 };
 
-struct uart_veri
-{
-	uint8_t p_veri[255];
-	uint16_t veri_boyutu;
-};
-
 class tf_luna
 {
 public:
@@ -72,8 +65,8 @@ enum class parse_state_t
 	HEAD_2,
 	DIST_L,
 	DIST_H,
-	AMP_L,
-	AMP_H,
+	AMP_L ,
+	AMP_H ,
 	TEMP_L,
 	TEMP_H,
 	CHEKSUM
@@ -82,11 +75,14 @@ parse_state_t parse_state;
 
 struct packet
 {
-    uint8_t   head_u8     ;
-	uint8_t   len_u8      ;
-	packet_id id_u8       ;
-	uint8_t   veri_u8[255];
-	uint8_t   chek_sum_u8 ;
+	packet(size_t data_size) : data_u8(new uint8_t[data_size]{0}) {
+
+	}
+    uint8_t                    head_u8     ;
+	uint8_t                    len_u8      ;
+	packet_id                  id_u8       ;
+	std::unique_ptr<uint8_t[]> data_u8     ;
+	uint8_t                    chek_sum_u8 ;
 };
 
 uint8_t calculate_checksum(const packet &packet_t);
