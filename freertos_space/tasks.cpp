@@ -16,25 +16,22 @@
 
 dma_ring_buffer uart_1_buffer(&huart1, 20);
 dma_ring_buffer uart_2_buffer(&huart2, 20);
-uint8_t cikilan_veri_u8[20];
 
-tf_luna luna_ct(5);
+tf_luna luna_ct;
 
 rtos_task comm_task_init(tasks::comm_task, "COMM_Task");
 rtos_task hmi_task(tasks::hmi_comm_task, "hmi_comm_task");
 
-hmi_interface::packet packet_to_send;
-
 void tasks::comm_task( void * pvParameters)
 {
-	constexpr TickType_t xFrequency = 10;
+	constexpr TickType_t xFrequency = 100;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	 luna_ct.output_control(output_en_state::ENABLE);
 
 	for(;;)
 	{
-		 uart_2_buffer.veri_al();
-		 luna_ct.parse_byte(uart_2_buffer.data_qu);
+		std::vector<uint8_t> data_get = uart_1_buffer.veri_al();
+		 luna_ct.parse_byte(data_get);
 
 		HAL_GPIO_TogglePin(ob_led_GPIO_Port, ob_led_Pin);
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -48,16 +45,20 @@ void tasks::hmi_comm_task( void * pvParameters)
 
 	for(;;)
 	{
-		 uart_1_buffer.veri_al();
+		uart_protocol::packet packet_to_get;
 
-//		 hmi_packets dene;
-//		 dene.send_periodic_packet();
+		std::vector<uint8_t> data_get = uart_2_buffer.veri_al();
 
-		 uint8_t a [] = "Emotional";
+//		uart_protocol::unpack_packet(data_get, packet_to_get);
 
-		 uint8_t* b = packet_to_send.get_packed(a, sizeof(a), hmi_interface::types::PERIODIC);
+		std::vector<uint8_t> dataToSend = {static_cast<uint8_t>((0xFF)&luna_ct.distance_cm_u16>>8), static_cast<uint8_t>((0xFF)&luna_ct.distance_cm_u16),
+				                           static_cast<uint8_t>((0xFF)&luna_ct.amp_u16>>8)        , static_cast<uint8_t>((0xFF)&luna_ct.amp_u16)};
 
-		 HAL_UART_Transmit_DMA(&huart1, b, sizeof(a) - 1 +  packet_to_send.interface_size);
+		uint32_t packet_size;
+		std::unique_ptr<uint8_t[]> packedData = uart_protocol::pack_packet(uart_protocol::data_packet, dataToSend, packet_size);
+
+		// Gönderilecek veriyi ekrana yazdır
+		HAL_UART_Transmit_DMA(&huart2, packedData.get(), packet_size);
 
 		 vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}

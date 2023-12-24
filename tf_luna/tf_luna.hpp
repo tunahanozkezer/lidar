@@ -51,12 +51,9 @@ public:
 	uint16_t amp_u16;
 	float temp_c_f32;
 
-
-	tf_luna(uint8_t deneme);
+	tf_luna();
 	void  output_control(output_en_state state);
-	void version_upward();
-	QueueHandle_t tx_qu;
-	void parse_byte(queue<uint8_t> &data_qu);
+	void parse_byte(std::vector<uint8_t> &data_vector);
 private:
 
 enum class parse_state_t

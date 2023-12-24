@@ -10,12 +10,10 @@
 
 #include "stdint.h"
 #include "stddef.h"
-#include "vector"
 #include "usart.h"
-#include "queue"
+#include <vector>
 
 #define DMA_BUFFER 1024
-
 
 using namespace std;
 
@@ -23,8 +21,7 @@ class dma_ring_buffer
 {
 public:
 	dma_ring_buffer(UART_HandleTypeDef *p_hdma_st, size_t dma_buf_size = DMA_BUFFER);
-	void veri_al();
-	queue<uint8_t> data_qu;
+	 std::vector<uint8_t> veri_al();
 
 private:
 

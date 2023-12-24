@@ -1,49 +1,37 @@
-/*
- * hmi_interface.hpp
- *
- *  Created on: Dec 14, 2023
- *      Author: tunah
- */
+#ifndef UART_PROTOCOL_H
+#define UART_PROTOCOL_H
 
-#ifndef HMI_INTERFACE_HPP_
-#define HMI_INTERFACE_HPP_
-
-#include <stdint.h>
+#include <iostream>
+#include <vector>
 #include <memory>
 
-namespace hmi_interface
-{
-using namespace std;
+class uart_protocol {
+public:
+    // Paket tipleri enum'u
+    enum packet_type {
+        data_packet = 0x01,
+        control_packet = 0x02
+        // İhtiyaca göre diğer paket tiplerini ekleyebilirsiniz
+    };
 
-enum class types : uint8_t
-{
-	VERSION,
-	CHECK,
-	PERIODIC
-};
-struct packet
-{
-	packet();
-	uint8_t* get_packed(uint8_t *_payload, uint8_t _size, types _type);
+    // Paket yapısı
+    struct packet {
+        uint8_t header[2];
+        uint8_t packet_type;
+        uint8_t packet_size;
+        std::vector<uint8_t> payload;
+        uint16_t checksum;
+    };
 
-	std::unique_ptr<uint8_t[]> raw_value;
+    // Paketleme işlemi
+    static std::unique_ptr<uint8_t[]> pack_packet(packet_type type, const std::vector<uint8_t>& data, uint32_t& packet_size);
 
-	static constexpr uint16_t header = 0x5372;
-	types    type                            ;
-	uint8_t  size                            ;
-	std::unique_ptr<uint8_t[]> payload       ;
-	uint16_t checksum                        ;
+    // Paketi çözme işlemi
+    static bool unpack_packet(const std::vector<uint8_t>& received_data, packet& unpacked_packet);
 
-	static constexpr auto header_size   = sizeof(header) + sizeof(type)+ sizeof(size);
-	static constexpr auto checksum_size = sizeof(checksum);
-	static constexpr auto interface_size = header_size + checksum_size;
 private:
-
-
-
-	uint16_t calculate_checksum(uint8_t *data_for_calculate, size_t size);
+    // Checksum hesaplama
+    static uint16_t calculate_checksum(const packet& packet);
 };
 
-}
-
-#endif /* HMI_INTERFACE_HPP_ */
+#endif // UART_PROTOCOL_H

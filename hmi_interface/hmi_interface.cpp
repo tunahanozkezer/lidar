@@ -1,49 +1,68 @@
-/*
- * hmi_interface.cpp
- *
- *  Created on: Dec 14, 2023
- *      Author: tunah
- */
-
 #include "hmi_interface.hpp"
-#include <cstring>
 
-using namespace hmi_interface;
+std::unique_ptr<uint8_t[]> uart_protocol::pack_packet(packet_type type, const std::vector<uint8_t>& data, uint32_t& packet_size) {
+    packet packet;
+    packet_size = 0;
+    packet.header[0] = 0x53;
+    packet.header[1] = 0x72;
+    packet.packet_type = static_cast<uint8_t>(type);
+    packet.packet_size = static_cast<uint8_t>(data.size());
+    packet.payload = data;
+    packet.checksum = calculate_checksum(packet);
 
-packet::packet()
-{
+    packet_size = 6 + packet.packet_size; // Header + Tip + Boyut + Checksum1 + Checksum2
 
+    std::unique_ptr<uint8_t[]> packed_packet(new uint8_t[packet_size]);
+    packed_packet[0] = packet.header[0];
+    packed_packet[1] = packet.header[1];
+    packed_packet[2] = packet.packet_type;
+    packed_packet[3] = packet.packet_size;
+    std::copy(packet.payload.begin(), packet.payload.end(), packed_packet.get() + 4);
+    packed_packet[packet_size - 2] = packet.checksum & 0xFF;
+    packed_packet[packet_size - 1] = (packet.checksum >> 8) & 0xFF;
+
+    return packed_packet;
 }
 
-uint8_t* packet::get_packed(uint8_t *_payload, uint8_t _size, types _type)
-{
-	raw_value = std::make_unique<uint8_t[]>(sizeof(_size+interface_size));
+bool uart_protocol::unpack_packet(const std::vector<uint8_t>& received_data, packet& unpacked_packet) {
+    if (received_data.size() < 6) {
+        // Minimum 6 byte gerekli (header, tip, boyut, checksum1, checksum2)
+        return false;
+    }
 
-	type = _type;
-	size = _size;
-	const auto seven_nation_army = header;
-//	raw_value(new uint8_t[header_size + size + checksum_size]);
+    unpacked_packet.header[0] = received_data[0];
+    unpacked_packet.header[1] = received_data[1];
+    unpacked_packet.packet_type = received_data[2];
+    unpacked_packet.packet_size = received_data[3];
 
-	std::memcpy(raw_value.get()                               ,&seven_nation_army , sizeof(header));
-	std::memcpy(raw_value.get()+sizeof(header)                ,&type              , sizeof(type  ));
-	std::memcpy(raw_value.get()+sizeof(header) + sizeof(type) ,&size              , sizeof(size  ));
-	std::memcpy(raw_value.get()+header_size                   ,_payload           , size          );
+    if (received_data.size() != (unpacked_packet.packet_size + 6)) {
+        // Boyut uyuşmazlığı
+        return false;
+    }
 
-	const uint16_t chekcsum =calculate_checksum(raw_value.get(), (size + header_size));
+    unpacked_packet.payload.assign(received_data.begin() + 4, received_data.begin() + 4 + unpacked_packet.packet_size);
+    unpacked_packet.checksum = (received_data[4 + unpacked_packet.packet_size] << 8) | received_data[5 + unpacked_packet.packet_size];
 
-	std::memcpy(raw_value.get()+header_size + size-1           ,&chekcsum , sizeof(chekcsum));
-
-	return raw_value.get();
+    // Checksum kontrolü
+    return (calculate_checksum(unpacked_packet) == unpacked_packet.checksum);
 }
 
-uint16_t packet::calculate_checksum(uint8_t *data_for_calculate, size_t size)
-	{
-		uint16_t chekcsum{};
+uint16_t uart_protocol::calculate_checksum(const packet& packet) {
+    uint16_t checksum = 0;
 
-		for(size_t i = 0; i< size; i++)
-		{
-			chekcsum += data_for_calculate[i];
-		}
+    for (int i = 0; i < 2; ++i) {
+        checksum += packet.header[i];
+    }
 
-		return chekcsum;
-	}
+    checksum += packet.packet_type;
+    checksum += packet.packet_size;
+
+    for (uint8_t byte : packet.payload) {
+        checksum += byte;
+    }
+
+    // Little endian düzeltme
+    checksum = ((checksum & 0xFF)<<8) | ((checksum & 0xFF00) >> 8);
+
+    return checksum;
+}
