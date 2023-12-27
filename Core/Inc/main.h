@@ -61,6 +61,22 @@ void Error_Handler(void);
 #define ob_led_GPIO_Port GPIOC
 #define ob_btn_Pin GPIO_PIN_0
 #define ob_btn_GPIO_Port GPIOA
+#define a4988_en_Pin GPIO_PIN_15
+#define a4988_en_GPIO_Port GPIOA
+#define a4988_ms1_Pin GPIO_PIN_3
+#define a4988_ms1_GPIO_Port GPIOB
+#define a4988_ms2_Pin GPIO_PIN_4
+#define a4988_ms2_GPIO_Port GPIOB
+#define a4988_ms3_Pin GPIO_PIN_5
+#define a4988_ms3_GPIO_Port GPIOB
+#define a4988_rst_Pin GPIO_PIN_6
+#define a4988_rst_GPIO_Port GPIOB
+#define a4988_slp_Pin GPIO_PIN_7
+#define a4988_slp_GPIO_Port GPIOB
+#define a4988_stp_Pin GPIO_PIN_8
+#define a4988_stp_GPIO_Port GPIOB
+#define a4988_dir_Pin GPIO_PIN_9
+#define a4988_dir_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
