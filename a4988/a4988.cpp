@@ -40,7 +40,6 @@ A4988_Step_Motor::~A4988_Step_Motor()
 }
 
 void A4988_Step_Motor::init() {
-//    HAL_TIM_PWM_Start(htim, channel);
     stop();
 
     HAL_GPIO_WritePin(a4988_dir_GPIO_Port, a4988_dir_Pin, GPIO_PIN_SET);
@@ -101,28 +100,26 @@ return mot_state;
 
 float A4988_Step_Motor::degree_state(uint32_t steps_per_second, bool &start) {
 
-	if(start == true && mot_state == motor_state::READY)
+	if(start == true )
 	{
-		stp_count_start = *pwm_counter;
-		stp_count = 0;
-		mot_state = motor_state::BUSY;
 		set_speed(steps_per_second);
-	}
-	else if (start == true && mot_state == motor_state::BUSY)
-	{
-		if(stp_count >= rotation)
+
+		if( mot_state == motor_state::READY)
 		{
 			stp_count_start = *pwm_counter;
 			stp_count = 0;
-			set_speed(0);
-			start = false;
+			mot_state = motor_state::BUSY;
 		}
-
-		set_speed(steps_per_second);
-		stp_count = *pwm_counter - stp_count_start;
-		angle_of_motor = stp_count * angle_per_step;
-
-
+		else
+		{
+			if(stp_count >= rotation)
+			{
+				stp_count_start = *pwm_counter;
+				stp_count = 0;
+			}
+			stp_count = *pwm_counter - stp_count_start;
+			angle_of_motor = stp_count * angle_per_step;
+		}
 	}
 	else
 	{
