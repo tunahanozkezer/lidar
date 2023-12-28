@@ -30,6 +30,16 @@ public:
     static bool unpack_packet(const std::vector<uint8_t>& received_data, packet& unpacked_packet);
 
 private:
+    enum class unpack_state {
+        Header1,
+        Header2,
+        Type,
+        Size,
+        Payload,
+        Checksum1,
+        Checksum2
+    };
+
     // Checksum hesaplama
     static uint16_t calculate_checksum(const packet& packet);
 };

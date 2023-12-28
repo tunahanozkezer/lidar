@@ -43,4 +43,3 @@ org.eclipse.core.resources.prefs
 stm32cubeide.project.prefs
 com.st.stm32cube.ide.mcu.sfrview.prefs
 language.settings.xml
-makefile

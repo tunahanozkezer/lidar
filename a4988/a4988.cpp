@@ -28,26 +28,22 @@
 #define a4988_dir_Pin GPIO_PIN_9
 #define a4988_dir_GPIO_Port GPIOB
 
-uint32_t rotation = 1000;
+uint32_t rotation = 16000;
 A4988_Step_Motor::A4988_Step_Motor(TIM_HandleTypeDef* htim, uint32_t channel, uint32_t *_pwm_cntr)
     : htim{htim}, channel{channel}, pwm_counter{_pwm_cntr}, stp_count{}, angle_of_motor{}
 {
+    stop();
+
+    HAL_GPIO_WritePin(a4988_dir_GPIO_Port, a4988_dir_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(a4988_rst_GPIO_Port, a4988_rst_Pin, GPIO_PIN_SET);
+
+    HAL_GPIO_WritePin(a4988_ms1_GPIO_Port, a4988_ms1_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(a4988_ms2_GPIO_Port, a4988_ms2_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(a4988_ms3_GPIO_Port, a4988_ms3_Pin, GPIO_PIN_SET);
 }
 
 A4988_Step_Motor::~A4988_Step_Motor()
 {
-
-}
-
-void A4988_Step_Motor::init() {
-    stop();
-
-    HAL_GPIO_WritePin(a4988_dir_GPIO_Port, a4988_dir_Pin, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(a4988_rst_GPIO_Port, a4988_rst_Pin, GPIO_PIN_SET);
-
-    HAL_GPIO_WritePin(a4988_ms1_GPIO_Port, a4988_ms1_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(a4988_ms2_GPIO_Port, a4988_ms2_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(a4988_ms3_GPIO_Port, a4988_ms3_Pin, GPIO_PIN_RESET);
 
 }
 

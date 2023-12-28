@@ -29,8 +29,6 @@ private:
 	UART_HandleTypeDef *uart_dma_st;
 	uint32_t tail_u32;
 	uint8_t p_buffer[20];
-
-	bool ilk_calisma_u1;
 };
 
 

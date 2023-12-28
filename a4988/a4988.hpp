@@ -22,14 +22,13 @@ public:
     A4988_Step_Motor(TIM_HandleTypeDef* htim, uint32_t channel, uint32_t *_pwm_cntr);
     ~A4988_Step_Motor();
 
-    void init();
     void set_speed(uint32_t steps_per_second);
     motor_state turn_step_based(uint32_t steps_per_second, uint32_t step_cnt, bool &start);
     float degree_state(uint32_t steps_per_second, bool &start);
     void stop();
 
 private:
-    static constexpr float angle_per_step = 360.0/1000.0;
+    const float angle_per_step = 360.0/16000.0;
 
     TIM_HandleTypeDef* htim;
     uint32_t channel;

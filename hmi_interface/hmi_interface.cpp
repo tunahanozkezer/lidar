@@ -25,26 +25,61 @@ std::unique_ptr<uint8_t[]> uart_protocol::pack_packet(packet_type type, const st
 }
 
 bool uart_protocol::unpack_packet(const std::vector<uint8_t>& received_data, packet& unpacked_packet) {
-    if (received_data.size() < 6) {
-        // Minimum 6 byte gerekli (header, tip, boyut, checksum1, checksum2)
-        return false;
-    }
+	 static unpack_state current_state{unpack_state::Header1};
 
-    unpacked_packet.header[0] = received_data[0];
-    unpacked_packet.header[1] = received_data[1];
-    unpacked_packet.packet_type = received_data[2];
-    unpacked_packet.packet_size = received_data[3];
+	    for (size_t i = 0; i < received_data.size(); ++i) {
+	        switch (current_state) {
+	        case unpack_state::Header1:
+	            if (received_data[i] == 0x53) {
+	                unpacked_packet.header[0] = received_data[i];
+	                current_state = unpack_state::Header2;
+	            }
+	            break;
 
-    if (received_data.size() != (unpacked_packet.packet_size + 6)) {
-        // Boyut uyuşmazlığı
-        return false;
-    }
+	        case unpack_state::Header2:
+	            if (received_data[i] == 0x72) {
+	                unpacked_packet.header[1] = received_data[i];
+	                current_state = unpack_state::Type;
+	            } else {
+	                current_state = unpack_state::Header1;
+	            }
+	            break;
 
-    unpacked_packet.payload.assign(received_data.begin() + 4, received_data.begin() + 4 + unpacked_packet.packet_size);
-    unpacked_packet.checksum = (received_data[4 + unpacked_packet.packet_size] << 8) | received_data[5 + unpacked_packet.packet_size];
+	        case unpack_state::Type:
+	            unpacked_packet.packet_type = received_data[i];
+	            current_state = unpack_state::Size;
+	            break;
 
-    // Checksum kontrolü
-    return (calculate_checksum(unpacked_packet) == unpacked_packet.checksum);
+	        case unpack_state::Size:
+	            unpacked_packet.packet_size = received_data[i];
+	            current_state = unpack_state::Payload;
+	            break;
+
+	        case unpack_state::Payload:
+	            if (i + unpacked_packet.packet_size < received_data.size()) {
+	                unpacked_packet.payload.assign(received_data.begin() + i, received_data.begin() + i + unpacked_packet.packet_size);
+	                i += unpacked_packet.packet_size - 1;
+	                current_state = unpack_state::Checksum1;
+	            } else {
+	                // Yeterli veri yok, bekle
+	                return false;
+	            }
+	            break;
+
+	        case unpack_state::Checksum1:
+	            unpacked_packet.checksum = received_data[i];
+	            current_state = unpack_state::Checksum2;
+	            break;
+
+	        case unpack_state::Checksum2:
+	            unpacked_packet.checksum |= static_cast<uint16_t>(received_data[i]) << 8;
+	            current_state = unpack_state::Header1;
+
+	            return (unpacked_packet.checksum == calculate_checksum(unpacked_packet));
+	        }
+	    }
+
+	    return false;
 }
 
 uint16_t uart_protocol::calculate_checksum(const packet& packet) {

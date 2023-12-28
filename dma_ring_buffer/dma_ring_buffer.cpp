@@ -16,7 +16,7 @@ dma_ring_buffer::dma_ring_buffer(UART_HandleTypeDef *p_hdma_st, size_t dma_buf_s
 	dma_buf_size_u32 = dma_buf_size;
 	uart_dma_st      = p_hdma_st;
 
-	ilk_calisma_u1 = true;
+	HAL_UART_Receive_DMA(uart_dma_st, p_buffer, dma_buf_size_u32);
 }
 
 
@@ -25,12 +25,6 @@ std::vector<uint8_t> dma_ring_buffer::veri_al()
 	const uint32_t head_u32 = dma_buf_size_u32 - uart_dma_st->hdmarx->Instance->NDTR;
 	static uint8_t yazilan_veri = 0;
 	std::vector<uint8_t> received_data;
-
-	if (true == ilk_calisma_u1)
-	{
-		HAL_UART_Receive_DMA(uart_dma_st, p_buffer, dma_buf_size_u32);
-		ilk_calisma_u1 = false;
-	}
 
 	if (head_u32 > tail_u32)
 	{
