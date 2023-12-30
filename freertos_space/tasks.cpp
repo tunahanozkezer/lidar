@@ -22,9 +22,10 @@ rtos_task comm_task_init(tasks::sensor_task  , "COMM_Task"    );
 rtos_task hmi_task      (tasks::hmi_comm_task, "hmi_comm_task");
 rtos_task lidar_task    (tasks::lidar_task   , "lidar_task",2 );
 
-uint32_t pres{100000};
+uint32_t pres{200000};
 bool start_flg{false};
 float angle_of_motor{};
+
 
 void tasks::lidar_task( void * pvParameters)
 {
@@ -47,58 +48,52 @@ void tasks::sensor_task( void * pvParameters)
 	constexpr TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 
-	dma_ring_buffer uart_1_buffer(&huart1, 20);
+	dma_ring_buffer tf_luna_buffer(&huart1, 50);
 
 	luna_ct.output_control(output_en_state::ENABLE);
 	for(;;)
 	{
-		std::vector<uint8_t> data_get = uart_1_buffer.veri_al();
-		 luna_ct.parse_byte(data_get);
+		static auto no_data = 0U;
+		std::vector<uint8_t> data_get = tf_luna_buffer.get_data();
 
+		if(data_get.size() == 0)
+		{
+			no_data++;
+			if(no_data > 20)
+			{
+				luna_ct.output_control(output_en_state::ENABLE);
+				no_data = 0;
+			}
+		}
+		 luna_ct.parse_byte(data_get);
 		HAL_GPIO_TogglePin(ob_led_GPIO_Port, ob_led_Pin);
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}
 }
 
-struct data_to_send
-{
-	uint16_t angle;
-    uint16_t distance;
-};
-
-
 void tasks::hmi_comm_task( void * pvParameters)
 {
-	 constexpr TickType_t xFrequency = 50;
+	 constexpr TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
+	dma_ring_buffer hmi_buffer(&huart2, 50);
 
-	dma_ring_buffer uart_2_buffer(&huart2, 20);
 	for(;;)
 	{
-		data_to_send my_data;
-		my_data.angle    = static_cast<uint16_t>(angle_of_motor*100);
-		my_data.distance = luna_ct.distance_cm_u16;
-
-		uint8_t* byte_ptr = reinterpret_cast<uint8_t*>(&my_data);
+		std::vector<uint8_t> data_get = hmi_buffer.get_data();
 
 		uart_protocol::packet packet_to_get;
 
-		std::vector<uint8_t> data_get = uart_2_buffer.veri_al();
-
 		if(uart_protocol::unpack_packet(data_get, packet_to_get))
 		{
-			uint8_t a{};
-			std::memcpy(&a, packet_to_get.payload.data(), packet_to_get.packet_size);
-			start_flg = a ==1;
+			hmi_packets::packet_parse(packet_to_get);
+			data_get.clear();
 		}
 
-		std::vector<uint8_t> dataToSend{byte_ptr, byte_ptr + sizeof(data_to_send)};
+		uint32_t packet_size{};
+		const uart_protocol::packet packet_to_send{ hmi_packets::packet_periodic(luna_ct.distance_cm_u16, angle_of_motor)};
+		std::unique_ptr<uint8_t[]> data__to_send = uart_protocol::packet_to_ptr(packet_to_send, packet_size);
 
-		uint32_t packet_size;
-		std::unique_ptr<uint8_t[]> packedData = uart_protocol::pack_packet(uart_protocol::data_packet, dataToSend, packet_size);
-
-		// Gönderilecek veriyi ekrana yazdır
-		HAL_UART_Transmit_DMA(&huart2, packedData.get(), packet_size);
+		HAL_UART_Transmit_DMA(&huart2, data__to_send.get(), packet_size);
 
 		 vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}

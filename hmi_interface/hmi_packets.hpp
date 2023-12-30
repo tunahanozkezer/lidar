@@ -16,25 +16,33 @@ public:
 
 	enum class types : uint8_t
 	{
-		VERSION,
-		CHECK,
-		PERIODIC
+		PERIODIC=1,
+		CMD,
+		SET_SPEED,
 	};
+
+
 
 	hmi_packets();
 
-	static uint8_t* packet_periodic(uint16_t _distance_cm, uint16_t _signal_quality, uint16_t _angle_deg);
-	static void packet_parse(const uint8_t *arr, size_t veriler, uint8_t type);
+	static uart_protocol::packet packet_periodic(uint16_t _distance_cm, float _angle_deg);
+	static void packet_parse(uart_protocol::packet &packet);
 private:
 //    static std::unique_ptr<uint8_t[]> buffer; // The byte buffer
 
-    struct periodic {
-        uint16_t distance_cm;
-        uint16_t signal_quality;
-        uint16_t  angle_deg;
-    };
 
-    static periodic periodic_pack;
+	struct periodic
+	{
+		uint16_t angle;
+	    uint16_t distance;
+	};
+
+	enum class cmd_types : uint8_t
+	{
+		STOP,
+		SCAN_INF,
+		SCAN_1_TIME
+	};
 
     // Add any other necessary member functions or variables
 };

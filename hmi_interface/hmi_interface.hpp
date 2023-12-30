@@ -7,12 +7,6 @@
 
 class uart_protocol {
 public:
-    // Paket tipleri enum'u
-    enum packet_type {
-        data_packet = 0x01,
-        control_packet = 0x02
-        // İhtiyaca göre diğer paket tiplerini ekleyebilirsiniz
-    };
 
     // Paket yapısı
     struct packet {
@@ -24,8 +18,9 @@ public:
     };
 
     // Paketleme işlemi
-    static std::unique_ptr<uint8_t[]> pack_packet(packet_type type, const std::vector<uint8_t>& data, uint32_t& packet_size);
-
+    static uart_protocol::packet pack_packet(uint8_t type, const std::vector<uint8_t>& data);
+    static std::unique_ptr<uint8_t[]> packet_to_ptr( packet                              packet       , uint32_t& packet_size);
+    static std::unique_ptr<uint8_t[]> packet_to_ptr( std::vector<uart_protocol::packet> &packet_vector, uint32_t& packet_size);
     // Paketi çözme işlemi
     static bool unpack_packet(const std::vector<uint8_t>& received_data, packet& unpacked_packet);
 

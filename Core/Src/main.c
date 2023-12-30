@@ -113,6 +113,11 @@ int main(void)
   vTaskStartScheduler();
   while (1)
   {
+	  /*!!!! Warning !!!!
+	   * This code designed as a freertos C++ project.
+	   * Projects tasks in freertos_space/tasks.cpp source file.
+	   * Enjoy reviewing code <3
+	   * */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -1,8 +1,8 @@
 #include "hmi_interface.hpp"
 
-std::unique_ptr<uint8_t[]> uart_protocol::pack_packet(packet_type type, const std::vector<uint8_t>& data, uint32_t& packet_size) {
-    packet packet;
-    packet_size = 0;
+uart_protocol::packet uart_protocol::pack_packet(uint8_t type, const std::vector<uint8_t>& data) {
+
+	packet packet;
     packet.header[0] = 0x53;
     packet.header[1] = 0x72;
     packet.packet_type = static_cast<uint8_t>(type);
@@ -10,18 +10,32 @@ std::unique_ptr<uint8_t[]> uart_protocol::pack_packet(packet_type type, const st
     packet.payload = data;
     packet.checksum = calculate_checksum(packet);
 
-    packet_size = 6 + packet.packet_size; // Header + Tip + Boyut + Checksum1 + Checksum2
+    return packet;
+}
 
-    std::unique_ptr<uint8_t[]> packed_packet(new uint8_t[packet_size]);
-    packed_packet[0] = packet.header[0];
-    packed_packet[1] = packet.header[1];
-    packed_packet[2] = packet.packet_type;
-    packed_packet[3] = packet.packet_size;
-    std::copy(packet.payload.begin(), packet.payload.end(), packed_packet.get() + 4);
-    packed_packet[packet_size - 2] = packet.checksum & 0xFF;
-    packed_packet[packet_size - 1] = (packet.checksum >> 8) & 0xFF;
+std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( packet packet, uint32_t& packet_size)
+{
+	std::unique_ptr<uint8_t[]> packed_packet(new uint8_t[packet.packet_size + 6]);
 
-    return packed_packet;
+	packed_packet[0] = packet.header[0];
+	packed_packet[1] = packet.header[1];
+	packed_packet[2] = packet.packet_type;
+	packed_packet[3] = packet.packet_size;
+	std::copy(packet.payload.begin(), packet.payload.end(), packed_packet.get() + 4);
+	packed_packet[packet.packet_size + 4] =  packet.checksum & 0xFF;
+	packed_packet[packet.packet_size + 5] = (packet.checksum >> 8) & 0xFF;
+	packet_size = packet.packet_size + 6;
+
+	return packed_packet;
+}
+
+std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( std::vector<uart_protocol::packet> &packet_vector, uint32_t& packet_size)
+{
+
+	packet packet = packet_vector.front();
+	packet_vector.erase(packet_vector.begin());
+
+	return packet_to_ptr(packet, packet_size);
 }
 
 bool uart_protocol::unpack_packet(const std::vector<uint8_t>& received_data, packet& unpacked_packet) {

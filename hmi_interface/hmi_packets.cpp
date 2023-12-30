@@ -10,26 +10,48 @@
 
 #include "hmi_packets.hpp"
 #include "usart.h"
-#include <cstring>  // Include for std::memcpy
+#include <cstring>
 
+extern bool start_flg;
+extern uint32_t pres;
 hmi_packets::hmi_packets()
 {
 
 }
 
 
-uint8_t* hmi_packets::packet_periodic(uint16_t _distance_cm, uint16_t _signal_quality, uint16_t _angle_deg)
+uart_protocol::packet hmi_packets::packet_periodic(uint16_t _distance_cm, float _angle_deg)
 {
-//	periodic_pack = { _distance_cm, _signal_quality, _angle_deg };
-//
-//    buffer = std::make_unique<uint8_t[]>(sizeof(periodic_pack));
-//    std::memcpy(buffer.get(), &periodic_pack, sizeof(periodic_pack));
-//
-//
-//    return buffer.get();
+
+	periodic payload{};
+	payload.distance = _distance_cm;
+	payload.angle    = static_cast<uint16_t>(_angle_deg*100.0);
+
+	uint8_t* byte_ptr = reinterpret_cast<uint8_t*>(&payload);
+
+	std::vector<uint8_t> dataToSend{byte_ptr, byte_ptr + sizeof(periodic)};
+
+	return uart_protocol::pack_packet(static_cast<uint8_t>(types::PERIODIC), dataToSend);
+
 }
 
-void hmi_packets::packet_parse(const uint8_t *arr, size_t veriler, uint8_t type)
+void hmi_packets::packet_parse(uart_protocol::packet &packet)
 {
-
+	switch (static_cast<types>(packet.packet_type)) {
+		case types::CMD:
+			if(cmd_types::STOP == static_cast<cmd_types>(packet.payload[0]))
+			{
+				start_flg = false;
+			}
+			else if(cmd_types::SCAN_INF == static_cast<cmd_types>(packet.payload[0]))
+			{
+				start_flg = true;
+			}
+			break;
+		case types::SET_SPEED:
+			std::memcpy(&pres, packet.payload.data(), sizeof(pres));
+			break;
+		default:
+			break;
+	}
 }
