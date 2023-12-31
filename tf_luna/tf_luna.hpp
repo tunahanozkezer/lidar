@@ -52,8 +52,10 @@ public:
 	float temp_c_f32;
 
 	tf_luna();
+	void  output_control(output_en_state state, bool send);
 	void  output_control(output_en_state state);
 	void parse_byte(std::vector<uint8_t> &data_vector);
+	void check_rx();
 private:
 
 enum class parse_state_t
@@ -69,6 +71,8 @@ enum class parse_state_t
 	CHEKSUM
 };
 parse_state_t parse_state;
+bool data_recieved;
+
 
 struct packet
 {

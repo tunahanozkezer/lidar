@@ -13,19 +13,20 @@
 #include <cstring>
 
 extern bool start_flg;
-extern uint32_t pres;
+extern uint32_t pwm_freq;
 hmi_packets::hmi_packets()
 {
 
 }
 
 
-uart_protocol::packet hmi_packets::packet_periodic(uint16_t _distance_cm, float _angle_deg)
+uart_protocol::packet hmi_packets::packet_periodic(uint16_t _distance_cm, float _angle_deg, motor_state mot_state)
 {
 
 	periodic payload{};
 	payload.distance = _distance_cm;
 	payload.angle    = static_cast<uint16_t>(_angle_deg*100.0);
+	payload.mot_state = mot_state;
 
 	uint8_t* byte_ptr = reinterpret_cast<uint8_t*>(&payload);
 
@@ -49,7 +50,7 @@ void hmi_packets::packet_parse(uart_protocol::packet &packet)
 			}
 			break;
 		case types::SET_SPEED:
-			std::memcpy(&pres, packet.payload.data(), sizeof(pres));
+			std::memcpy(&pwm_freq, packet.payload.data(), sizeof(pwm_freq));
 			break;
 		default:
 			break;

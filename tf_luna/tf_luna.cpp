@@ -10,35 +10,58 @@
 #include "stdlib.h"
 #include "usart.h"
 
-tf_luna::tf_luna() : parse_state{parse_state_t::HEAD_1}
+tf_luna::tf_luna() : parse_state{parse_state_t::HEAD_1}, data_recieved{}
 {
 
+}
+
+void  tf_luna::output_control(output_en_state state, bool send)
+{
+	if(send == false)
+	{
+		packet send_packet(1);
+
+		send_packet.head_u8     = 0x5A;
+		send_packet.len_u8      = 5;
+		send_packet.id_u8       = packet_id::ID_OUTPUT_EN;
+		send_packet.data_u8[0]  = static_cast<uint8_t>(state);
+		send_packet.chek_sum_u8 = 0;//calculate_checksum(send_packet);
+
+		std::unique_ptr<uint8_t[]> p_packet_to_send(new uint8_t[send_packet.len_u8]);
+
+		p_packet_to_send[0] = send_packet.head_u8;
+		p_packet_to_send[1] = send_packet.len_u8;
+		p_packet_to_send[2] = static_cast<uint8_t>(send_packet.id_u8);
+		p_packet_to_send[3] = send_packet.data_u8[0];
+		p_packet_to_send[4] = send_packet.chek_sum_u8;
+
+		HAL_UART_Transmit_DMA(&huart1, p_packet_to_send.get(), send_packet.len_u8);
+	}
 }
 
 void  tf_luna::output_control(output_en_state state)
 {
-	packet send_packet(1);
+	if(data_recieved == false)
+	{
+		packet send_packet(1);
 
-	send_packet.head_u8     = 0x5A;
-	send_packet.len_u8      = 5;
-	send_packet.id_u8       = packet_id::ID_OUTPUT_EN;
-	send_packet.data_u8[0]  = static_cast<uint8_t>(state);
-	send_packet.chek_sum_u8 = 0;//calculate_checksum(send_packet);
+		send_packet.head_u8     = 0x5A;
+		send_packet.len_u8      = 5;
+		send_packet.id_u8       = packet_id::ID_OUTPUT_EN;
+		send_packet.data_u8[0]  = static_cast<uint8_t>(state);
+		send_packet.chek_sum_u8 = 0;//calculate_checksum(send_packet);
 
-	 std::unique_ptr<uint8_t[]> p_packet_to_send(new uint8_t[send_packet.len_u8]);
+		std::unique_ptr<uint8_t[]> p_packet_to_send(new uint8_t[send_packet.len_u8]);
 
-	 p_packet_to_send[0] = send_packet.head_u8;
-	 p_packet_to_send[1] = send_packet.len_u8;
-	 p_packet_to_send[2] = static_cast<uint8_t>(send_packet.id_u8);
-	 p_packet_to_send[3] = send_packet.data_u8[0];
-	 p_packet_to_send[4] = send_packet.chek_sum_u8;
+		p_packet_to_send[0] = send_packet.head_u8;
+		p_packet_to_send[1] = send_packet.len_u8;
+		p_packet_to_send[2] = static_cast<uint8_t>(send_packet.id_u8);
+		p_packet_to_send[3] = send_packet.data_u8[0];
+		p_packet_to_send[4] = send_packet.chek_sum_u8;
 
-	 HAL_UART_Transmit_DMA(&huart1, p_packet_to_send.get(), send_packet.len_u8);
-
-//	xQueueSend(tx_qu, &verileer, 10);
-
+		HAL_UART_Transmit_DMA(&huart1, p_packet_to_send.get(), send_packet.len_u8);
+	}
 }
-
 
 void tf_luna::parse_byte(std::vector<uint8_t> &data_vector) {
     uint16_t tmp_distance_cm_u16 = 0;
@@ -108,6 +131,7 @@ void tf_luna::parse_byte(std::vector<uint8_t> &data_vector) {
                     distance_cm_u16 = tmp_distance_cm_u16;
                     amp_u16 = tmp_amp_u16;
                     temp_c_f32 = (tmp_temperature_raw_u16 / 8) - 256;
+                    data_recieved = true;
                     // Veri başarıyla işlendi
                 } else {
                     // Checksum uyuşmazlığı

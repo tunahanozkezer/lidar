@@ -9,7 +9,7 @@
 #define HMI_PACKETS_HPP_
 
 #include <hmi_interface.hpp>
-
+#include <a4988.hpp>
 
 class hmi_packets {
 public:
@@ -25,7 +25,7 @@ public:
 
 	hmi_packets();
 
-	static uart_protocol::packet packet_periodic(uint16_t _distance_cm, float _angle_deg);
+	static uart_protocol::packet packet_periodic(uint16_t _distance_cm, float _angle_deg, motor_state mot_state);
 	static void packet_parse(uart_protocol::packet &packet);
 private:
 //    static std::unique_ptr<uint8_t[]> buffer; // The byte buffer
@@ -35,6 +35,7 @@ private:
 	{
 		uint16_t angle;
 	    uint16_t distance;
+	    motor_state mot_state;
 	};
 
 	enum class cmd_types : uint8_t
