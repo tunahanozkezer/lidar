@@ -10,6 +10,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include tf_luna/subdir.mk
+-include peripherals/subdir.mk
 -include hmi_interface/subdir.mk
 -include freertos_space/freertos_api/subdir.mk
 -include freertos_space/subdir.mk
@@ -98,8 +99,8 @@ all: main-build
 main-build: lidar.elf secondary-outputs
 
 # Tool invocations
-lidar.elf lidar.map: $(OBJS) $(USER_OBJS) C:\Genel\ Projeler\STM32\ Cube\ IDE\Lidar_Ilk_Deneme\lidar\STM32F401CDUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "lidar.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Genel Projeler\STM32 Cube IDE\Lidar_Ilk_Deneme\lidar\STM32F401CDUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="lidar.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+lidar.elf lidar.map: $(OBJS) $(USER_OBJS) C:\Genel\ Projeler\STM32\ Cube\ IDE\Lidar\lidar\STM32F401CDUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-g++ -o "lidar.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Genel Projeler\STM32 Cube IDE\Lidar\lidar\STM32F401CDUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="lidar.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

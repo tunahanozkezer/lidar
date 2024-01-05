@@ -85,33 +85,25 @@ return motor_state_;
 
 float A4988_Step_Motor::degree_state(uint32_t steps_per_second, bool &start, motor_state &motor_state) {
 
-	if(start == true )
-	{
+	if(true == start ){
 		set_speed(steps_per_second);
 
-		if( motor_state_ == motor_state::Ready)
-		{
-			step_count_ = *pwm_counter_;
-			step_count_ = 0;
+		if( motor_state_ == motor_state::Ready){
+			stp_count_start_ = *pwm_counter_;
 			motor_state_ = motor_state::Busy;
 		}
-		else
-		{
-			if(step_count_ >= rotation)
-			{
+		else{
+			if(step_count_ >= rotation){
 				stp_count_start_ = *pwm_counter_;
-				step_count_ = 0;
 			}
-			step_count_ = *pwm_counter_ - stp_count_start_;
-			angle_of_motor = step_count_ * angle_per_step;
 		}
+		step_count_ = *pwm_counter_ - stp_count_start_;
+		angle_of_motor = step_count_ * angle_per_step;
 	}
-	else
-	{
+	else{
 		motor_state_ = motor_state::Ready;
 		set_speed(0);
 	}
-
 	motor_state = motor_state_;
 	return angle_of_motor;
 }

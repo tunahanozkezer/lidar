@@ -19,9 +19,9 @@
 extern uint32_t wave_count;
 tf_luna luna_ct;
 
-rtos_task comm_task_init(tasks::sensor_task  , "COMM_Task"    );
-rtos_task hmi_task      (tasks::hmi_comm_task, "hmi_comm_task");
-rtos_task lidar_task    (tasks::lidar_task   , "lidar_task",2 );
+rtos_task comm_task_init(tasks::sensor_task  , "COMM_Task"        );
+rtos_task hmi_task      (tasks::hmi_comm_task, "hmi_comm_task"    );
+rtos_task lidar_task    (tasks::lidar_task   , "lidar_task"    ,2 );
 
 uint32_t pwm_freq{200000};
 bool start_flg{false};
@@ -65,27 +65,22 @@ void tasks::sensor_task( void * pvParameters)
 
 void tasks::hmi_comm_task( void * pvParameters)
 {
-	 constexpr TickType_t xFrequency = 10;
+	constexpr TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	dma_ring_buffer hmi_buffer(&huart2, 50);
+
+	uart_wrapper wrap((std::shared_ptr<UART_HandleTypeDef>(&huart2)));
+	hmi_packets packettt(wrap);
 
 	for(;;)
 	{
 		std::vector<uint8_t> data_get = hmi_buffer.get_data();
 
-		uart_protocol::packet packet_to_get;
+		hmi_packets::packet_parse(data_get);
 
-		if(uart_protocol::unpack_packet(data_get, packet_to_get))
-		{
-			hmi_packets::packet_parse(packet_to_get);
-			data_get.clear();
-		}
+		packettt.packet_periodic(luna_ct.distance_cm_u16, angle_of_motor, motor_state);
 
-		uint32_t packet_size{};
-		const uart_protocol::packet packet_to_send{ hmi_packets::packet_periodic(luna_ct.distance_cm_u16, angle_of_motor, motor_state)};
-		std::unique_ptr<uint8_t[]> data__to_send = uart_protocol::packet_to_ptr(packet_to_send, packet_size);
-
-		HAL_UART_Transmit_DMA(&huart2, data__to_send.get(), packet_size);
+//		HAL_UART_Transmit_DMA(&huart2, data__to_send.get(), packet_size);
 
 		 vTaskDelayUntil( &xLastWakeTime, xFrequency );
 	}

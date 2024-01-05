@@ -10,8 +10,9 @@
 
 #include <hmi_interface.hpp>
 #include <a4988.hpp>
+#include <uart_wrapper.hpp>
 
-class hmi_packets {
+class hmi_packets: uart_protocol {
 public:
 
 	enum class types : uint8_t
@@ -22,14 +23,16 @@ public:
 	};
 
 
+	struct packet_for_uart
+	{
 
-	hmi_packets();
+	};
+	hmi_packets(uart_wrapper &uart_wrapper);
 
-	static uart_protocol::packet packet_periodic(uint16_t _distance_cm, float _angle_deg, motor_state mot_state);
-	static void packet_parse(uart_protocol::packet &packet);
+	void packet_periodic(uint16_t _distance_cm, float _angle_deg, motor_state mot_state);
+	static void packet_parse(const std::vector<uint8_t> &received_data);
 private:
-//    static std::unique_ptr<uint8_t[]> buffer; // The byte buffer
-
+	uart_wrapper &uart_wrapper_;
 
 	struct periodic
 	{

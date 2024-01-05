@@ -13,7 +13,7 @@ uart_protocol::packet uart_protocol::pack_packet(uint8_t type, const std::vector
     return packet;
 }
 
-std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( packet packet, uint32_t& packet_size)
+std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( packet packet, uint16_t& packet_size)
 {
 	std::unique_ptr<uint8_t[]> packed_packet(new uint8_t[packet.packet_size + 6]);
 
@@ -29,7 +29,7 @@ std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( packet packet, uint32_t
 	return packed_packet;
 }
 
-std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( std::vector<uart_protocol::packet> &packet_vector, uint32_t& packet_size)
+std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( std::vector<uart_protocol::packet> &packet_vector, uint16_t& packet_size)
 {
 
 	packet packet = packet_vector.front();
