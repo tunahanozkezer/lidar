@@ -62,7 +62,7 @@ void DMA2_Stream2_IRQHandler(void);
 void OTG_FS_IRQHandler(void);
 void DMA2_Stream7_IRQHandler(void);
 /* USER CODE BEGIN EFP */
-
+void TimerOverflowCallback(TIM_HandleTypeDef *htim);
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

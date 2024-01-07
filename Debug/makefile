@@ -12,7 +12,6 @@ RM := rm -rf
 -include tf_luna/subdir.mk
 -include peripherals/subdir.mk
 -include hmi_interface/subdir.mk
--include freertos_space/freertos_api/subdir.mk
 -include freertos_space/subdir.mk
 -include dma_ring_buffer/subdir.mk
 -include a4988/subdir.mk

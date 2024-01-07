@@ -28,8 +28,8 @@
 #define a4988_dir_Pin GPIO_PIN_9
 #define a4988_dir_GPIO_Port GPIOB
 
-A4988_Step_Motor::A4988_Step_Motor(std::shared_ptr<TIM_HandleTypeDef> timer, uint32_t channel, std::shared_ptr<uint32_t> pwm_counter, step_resolution step_reso)
-    :  timer_{timer},  pwm_counter_{pwm_counter}, channel_{channel}, step_count_{}, angle_of_motor{}, rotation{1000}
+A4988_Step_Motor::A4988_Step_Motor(std::shared_ptr<TIM_HandleTypeDef> timer, uint32_t channel, step_resolution step_reso)
+    :  timer_{timer}, channel_{channel}, step_count_{}, angle_of_motor_{}, rotation{1000}
 {
     stop();
     set_step_resolution(step_reso);
@@ -60,52 +60,29 @@ void A4988_Step_Motor::set_speed(uint32_t steps_per_second) {
     }
 }
 
-
-motor_state A4988_Step_Motor::turn_step_based(uint32_t steps_per_second, uint32_t step_count, bool& start) {
-	// Timer frequency is set (PWM frequency).
-	if(start == true && motor_state_ == motor_state::Ready)
-	{
-		step_count_ = *pwm_counter_ + step_count_;
-		motor_state_ = motor_state::Busy;
-		set_speed(steps_per_second);
-	}
-	else if(start == true && motor_state_ == motor_state::Busy)
-	{
-		if(*pwm_counter_ >= step_count_)
-		{
-			motor_state_ = motor_state::Ready;
-			start = false;
-			set_speed(0);
-		}
-	}
-
-return motor_state_;
-}
-
-
-float A4988_Step_Motor::degree_state(uint32_t steps_per_second, bool &start, motor_state &motor_state) {
+float A4988_Step_Motor::degree_state(uint32_t steps_per_second, bool start, uint32_t wave_count, motor_states &motor_state) {
 
 	if(true == start ){
 		set_speed(steps_per_second);
 
-		if( motor_state_ == motor_state::Ready){
-			stp_count_start_ = *pwm_counter_;
-			motor_state_ = motor_state::Busy;
+		if( motor_state_ == motor_states::Ready){
+			stp_count_start_ = wave_count;
+			motor_state_ = motor_states::Busy;
 		}
 		else{
 			if(step_count_ >= rotation){
-				stp_count_start_ = *pwm_counter_;
+				stp_count_start_ = wave_count;
 			}
 		}
-		step_count_ = *pwm_counter_ - stp_count_start_;
-		angle_of_motor = step_count_ * angle_per_step;
+		step_count_ = wave_count - stp_count_start_;
+		angle_of_motor_ = step_count_ * angle_per_step;
 	}
 	else{
-		motor_state_ = motor_state::Ready;
+		motor_state_ = motor_states::Ready;
 		set_speed(0);
 	}
 	motor_state = motor_state_;
-	return angle_of_motor;
+	return angle_of_motor_;
 }
 
 void A4988_Step_Motor::stop() {

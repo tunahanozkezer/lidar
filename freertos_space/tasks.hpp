@@ -13,10 +13,9 @@
 class tasks
 {
 public:
-	static void init_tasks();
 	static void sensor_task( void * pvParameters );
-	static void hmi_comm_task( void * pvParameters );
-	static void lidar_task( void * pvParameters );
+	static void hmi_task   ( void * pvParameters );
+	static void lidar_task ( void * pvParameters );
 };
 
 

@@ -66,7 +66,7 @@ extern UART_HandleTypeDef huart2;
 extern TIM_HandleTypeDef htim2;
 
 /* USER CODE BEGIN EV */
-
+extern uint32_t wave_count;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -295,4 +295,11 @@ void DMA2_Stream7_IRQHandler(void)
 
 /* USER CODE BEGIN 1 */
 
+void TimerOverflowCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM10)
+  {
+	  wave_count++;
+  }
+}
 /* USER CODE END 1 */

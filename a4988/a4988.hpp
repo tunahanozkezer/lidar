@@ -11,7 +11,7 @@
 #include "tim.h"
 #include <memory>
 
-enum class motor_state : uint16_t {
+enum class motor_states : uint16_t {
     Ready,
     Busy
 };
@@ -27,26 +27,24 @@ enum class step_resolution : uint8_t{
 class A4988_Step_Motor  {
 public:
 
-    motor_state motor_state_;
+	motor_states motor_state_;
 
-	A4988_Step_Motor(std::shared_ptr<TIM_HandleTypeDef> timer, uint32_t channel, std::shared_ptr<uint32_t> pwm_counter, step_resolution step_reso = step_resolution::SIXTEENTH_STEP);
+	A4988_Step_Motor(std::shared_ptr<TIM_HandleTypeDef> timer, uint32_t channel, step_resolution step_reso = step_resolution::SIXTEENTH_STEP);
     virtual ~A4988_Step_Motor() = default;
 
     A4988_Step_Motor(const A4988_Step_Motor&) = delete;
     A4988_Step_Motor& operator=(const A4988_Step_Motor&) = delete;
 
     void set_speed(uint32_t steps_per_second);
-    motor_state turn_step_based(uint32_t steps_per_second, uint32_t step_count, bool& start);
-    float degree_state(uint32_t steps_per_second, bool &start, motor_state &motor_state);
+    float degree_state(uint32_t steps_per_second, bool start, uint32_t wave_count, motor_states &motor_state);
     void stop();
 private:
     float angle_per_step;
     std::shared_ptr<TIM_HandleTypeDef> timer_;
-    std::shared_ptr<uint32_t> pwm_counter_;
     uint32_t channel_;
     uint32_t stp_count_start_;
     uint32_t step_count_;
-    float angle_of_motor;
+    float angle_of_motor_;
     uint32_t rotation;
 
     void set_step_resolution(step_resolution step_reso = step_resolution::SIXTEENTH_STEP);

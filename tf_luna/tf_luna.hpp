@@ -53,8 +53,8 @@ public:
 
 	tf_luna();
 	void  output_control(output_en_state state, bool send);
-	void  output_control(output_en_state state);
-	void parse_byte(std::vector<uint8_t> &data_vector);
+	uint16_t output_control(output_en_state state);
+	void parse_byte(std::vector<uint8_t> data_vector);
 	void check_rx();
 private:
 

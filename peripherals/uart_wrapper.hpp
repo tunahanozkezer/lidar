@@ -14,6 +14,7 @@
 #include <semphr.h>
 
 class uart_wrapper {
+
 public:
 	uart_wrapper(std::shared_ptr<UART_HandleTypeDef> huart);
     void sendData(const std::unique_ptr<uint8_t[]> &p_data, uint16_t size);

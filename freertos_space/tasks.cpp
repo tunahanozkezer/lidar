@@ -6,82 +6,63 @@
  */
 
 #include <tasks.hpp>
-#include <usart.h>
-#include <gpio.h>
 #include <dma_ring_buffer.hpp>
 #include <tf_luna.hpp>
 #include <task.h>
-#include <hmi_packets.hpp>
 #include <a4988.hpp>
-#include <cstring>
-#include <memory>
+#include <uart_wrapper.hpp>
+#include <hmi_packets.hpp>
 
-extern uint32_t wave_count;
-tf_luna luna_ct;
+uint32_t wave_count = 0; // stepper motor clock count. Just here for read. look at "TimerOverflowCallback"
+rtos_task os_ui;
+rtos_task sensor_task (tasks::sensor_task  , "COMM_Task"        );
+rtos_task hmi_task    (tasks::hmi_task     , "hmi_comm_task",2  );
+rtos_task lidar_task  (tasks::lidar_task   , "lidar_task"   ,3  );
 
-rtos_task comm_task_init(tasks::sensor_task  , "COMM_Task"        );
-rtos_task hmi_task      (tasks::hmi_comm_task, "hmi_comm_task"    );
-rtos_task lidar_task    (tasks::lidar_task   , "lidar_task"    ,2 );
-
-uint32_t pwm_freq{200000};
-bool start_flg{false};
-float angle_of_motor{};
-motor_state motor_state{};
-
-void tasks::lidar_task( void * pvParameters)
+void tasks::lidar_task( void * pv_parameters)
 {
-	constexpr TickType_t xFrequency = 1;
-	TickType_t xLastWakeTime = xTaskGetTickCount();
-
-	A4988_Step_Motor a4988(std::shared_ptr<TIM_HandleTypeDef>(&htim10), TIM_CHANNEL_1, std::shared_ptr<uint32_t>(&wave_count));
-
+	constexpr TickType_t task_frequency{1};
+	TickType_t last_wake_time{xTaskGetTickCount()};
+	A4988_Step_Motor a4988(std::shared_ptr<TIM_HandleTypeDef>(&htim10), TIM_CHANNEL_1);
 	for(;;)
 	{
-		angle_of_motor = a4988.degree_state(pwm_freq, start_flg, motor_state);
-
-
-		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		motor_states motor_state = static_cast<motor_states>(os_ui.get_motor_state());
+		os_ui.set_angle_of_motor(a4988.degree_state( os_ui.get_pwm_freq(), os_ui.get_start_flag(), wave_count, motor_state));
+		os_ui.set_motor_state(static_cast<uint8_t>(motor_state));
+		vTaskDelayUntil( &last_wake_time, task_frequency );
 	}
 }
 
-
-void tasks::sensor_task( void * pvParameters)
+void tasks::sensor_task( void * pv_parameters)
 {
-	constexpr TickType_t xFrequency = 10;
-	TickType_t xLastWakeTime = xTaskGetTickCount();
+	TickType_t task_frequency{1000};
+	TickType_t last_wake_time{xTaskGetTickCount()};
 
 	dma_ring_buffer tf_luna_buffer(&huart1, 50);
 
+	tf_luna luna_ct;
 	for(;;)
 	{
-
-		std::vector<uint8_t> data_get = tf_luna_buffer.get_data();
-		luna_ct.parse_byte(data_get);
-		luna_ct.output_control(output_en_state::ENABLE);
-
-		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		luna_ct.parse_byte(tf_luna_buffer.get_data());
+		task_frequency = luna_ct.output_control(output_en_state::ENABLE);
+		os_ui.set_sensor_distance(luna_ct.distance_cm_u16);
+		vTaskDelayUntil( &last_wake_time, task_frequency );
 	}
 }
 
-void tasks::hmi_comm_task( void * pvParameters)
+void tasks::hmi_task( void * pv_parameters)
 {
-	constexpr TickType_t xFrequency = 10;
-	TickType_t xLastWakeTime = xTaskGetTickCount();
-	dma_ring_buffer hmi_buffer(&huart2, 50);
+	constexpr TickType_t task_frequency{50};
+	TickType_t last_wake_time{xTaskGetTickCount()};
 
+	dma_ring_buffer hmi_buffer(&huart2, 50);
 	uart_wrapper wrap((std::shared_ptr<UART_HandleTypeDef>(&huart2)));
-	hmi_packets packettt(wrap);
+	hmi_packets<uart_wrapper> hmi_comm(wrap);
 
 	for(;;)
 	{
-		std::vector<uint8_t> data_get = hmi_buffer.get_data();
-
-		hmi_packets::packet_parse(data_get);
-
-		packettt.packet_periodic(luna_ct.distance_cm_u16, angle_of_motor, motor_state);
-
-//		HAL_UART_Transmit_DMA(&huart2, data__to_send.get(), packet_size);
-
-		 vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		hmi_comm.packet_parse(hmi_buffer.get_data());
+		hmi_comm.packet_periodic(os_ui.get_sensor_distance_cm(), os_ui.get_angle_of_motor(), static_cast<motor_states>(os_ui.get_motor_state()));
+		vTaskDelayUntil( &last_wake_time, task_frequency );
 	}
 }

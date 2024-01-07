@@ -21,16 +21,7 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
-uint32_t wave_count = 0;
-
-void TimerOverflowCallback(TIM_HandleTypeDef *htim)
-{
-  if (htim->Instance == TIM10)
-  {
-    // Timer taşma olayı gerçekleştiğinde buraya girer
-	  wave_count++; // Dalga sayacını artır
-  }
-}
+#include "stm32f4xx_it.h"
 /* USER CODE END 0 */
 
 TIM_HandleTypeDef htim10;
