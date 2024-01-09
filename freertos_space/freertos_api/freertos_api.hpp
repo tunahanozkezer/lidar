@@ -12,27 +12,42 @@
 #include <task.h>
 #include <semphr.h>
 
-#define MIN_HEAP_SIZE 128
 class rtos_task
 {
 	public:
-	rtos_task(void (*rtos_task)( void * pvParameters ), const char *text_name, UBaseType_t priority = 1, configSTACK_DEPTH_TYPE task_heap  = MIN_HEAP_SIZE) : task{rtos_task}, heap{task_heap}
+	rtos_task(void (*rtos_task)( void * pvParameters ), const char *text_name, UBaseType_t priority = 1, configSTACK_DEPTH_TYPE task_heap  = min_heap_size) : task{rtos_task}, heap{task_heap}
 	{
-		xTaskCreate(
-				rtos_task   ,  /* Function that implements the task. */
-				text_name   ,  /* Text name for the task. */
-				task_heap   ,  /* Stack size in words, not bytes. */
-				( void * ) 1,  /* Parameter passed into the task. */
-				priority    ,  /* Priority at which the task is created. */
-				&handle     ); /* Used to pass out the created task's handle. */
+		if(rtos_task != NULL || text_name != NULL)
+		{
+			xTaskCreate(
+					rtos_task   ,  /* Function that implements the task. */
+					text_name   ,  /* Text name for the task. */
+					task_heap   ,  /* Stack size in words, not bytes. */
+					( void * ) 1,  /* Parameter passed into the task. */
+					priority    ,  /* Priority at which the task is created. */
+					&handle     ); /* Used to pass out the created task's handle. */
+		}
 	}
 
+private:
+	static constexpr auto min_heap_size = 128;
+	void (*task)( void * pvParameters );
+	configSTACK_DEPTH_TYPE heap;
+	TaskHandle_t handle;
 
-	rtos_task() :pwm_freq_mutex{xSemaphoreCreateMutex()},
+};
+
+class rtos_ui
+{
+	public:
+
+
+	rtos_ui() :pwm_freq_mutex{xSemaphoreCreateMutex()},
 			start_flag_mutex{xSemaphoreCreateMutex()},
 			angle_of_motor_mutex{xSemaphoreCreateMutex()},
 			motor_state_mutex{xSemaphoreCreateMutex()},
-			sensor_distance_mutex{xSemaphoreCreateMutex()}
+			sensor_distance_mutex{xSemaphoreCreateMutex()},
+			dummy{xSemaphoreCreateMutex()}
 			{}
 
     // Verilere güvenli erişim sağlamak için kilitleme (lock) fonksiyonu
@@ -118,6 +133,7 @@ private:
     SemaphoreHandle_t angle_of_motor_mutex {};
     SemaphoreHandle_t motor_state_mutex    {};
     SemaphoreHandle_t sensor_distance_mutex{};
+    SemaphoreHandle_t dummy    {};
 
     uint32_t pwm_freq{200000};
     bool start_flag{false};
@@ -125,10 +141,5 @@ private:
     uint8_t motor_state{};
     uint16_t sensor_distance_cm{};
 
-	void (*task)( void * pvParameters );
-	configSTACK_DEPTH_TYPE heap;
-	TaskHandle_t handle;
-
 };
-
 #endif /* FREERTOS_API_HPP_ */

@@ -1,11 +1,11 @@
-#include "hmi_interface.hpp"
-#include  <numeric> //std::accumulate
-#include <iterator> //iterator
+#include <hmi_interface.hpp>
+#include <numeric>
+#include <iterator>
 
-//list initialization
 uart_protocol::packet uart_protocol::pack_packet(uint8_t type, const std::vector<uint8_t>& data) {
-    auto packet = uart_protocol::packet{
-        {0x53, 0x72}, // header
+
+	auto packet = uart_protocol::packet{
+		{head_1, head_2}, // header
         type, // packet_type
         static_cast<uint8_t>(data.size()), // packet_size
         data, // payload
@@ -45,6 +45,12 @@ std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr(std::vector<uart_protoco
 
 
 bool uart_protocol::unpack_packet(const std::vector<uint8_t>& received_data, packet& unpacked_packet) {
+
+    if(received_data.size() == 0)
+    {
+    	return false;
+    }
+
     static unpack_state current_state{unpack_state::Header1};
     for (auto it = received_data.begin(); it != received_data.end(); ++it) {
         auto& data = *it;

@@ -9,7 +9,6 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include tf_luna/subdir.mk
 -include peripherals/subdir.mk
 -include hmi_interface/subdir.mk
 -include freertos_space/subdir.mk

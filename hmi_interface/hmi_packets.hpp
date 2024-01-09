@@ -13,8 +13,8 @@
 #include <cstring>
 #include <tasks.hpp>
 
-extern rtos_task os_ui;
-template <class T>
+extern rtos_ui os_ui;
+template <class uart_type>
 class hmi_packets: uart_protocol {
 public:
 
@@ -32,7 +32,7 @@ public:
 		SCAN_1_TIME
 	};
 
-	hmi_packets(T uart_wrapper): uart_wrapper_{uart_wrapper}{}
+	hmi_packets(uart_type uart_wrapper): uart_wrapper_{uart_wrapper}{}
 
 	void packet_periodic(uint16_t _distance_cm, float _angle_deg, motor_states mot_state)
 	{
@@ -42,11 +42,11 @@ public:
 			             _distance_cm                            ,
 		                 mot_state                               };
 
-		std::unique_ptr<uint8_t[]> byte_ptr = std::make_unique<uint8_t[]>(sizeof(payload));
+		const std::unique_ptr<uint8_t[]> byte_ptr = std::make_unique<uint8_t[]>(sizeof(payload));
 		std::memcpy(byte_ptr.get(), &payload, sizeof(periodic));
 
-		std::vector<uint8_t> payload_vector{byte_ptr.get(), byte_ptr.get() + sizeof(periodic)};
-		std::unique_ptr<uint8_t[]> data_to_send{packet_to_ptr(pack_packet(static_cast<uint8_t>(types::PERIODIC), payload_vector), packet_size)};
+		const std::vector<uint8_t> payload_vector{byte_ptr.get(), byte_ptr.get() + sizeof(periodic)};
+		const std::unique_ptr<uint8_t[]> data_to_send{packet_to_ptr(pack_packet(static_cast<uint8_t>(types::PERIODIC), payload_vector), packet_size)};
 
 		uart_wrapper_.sendData(data_to_send, packet_size);
 	}
@@ -81,7 +81,7 @@ public:
 		}
 	}
 private:
-	T uart_wrapper_;
+	uart_type uart_wrapper_;
 
 	struct periodic
 	{

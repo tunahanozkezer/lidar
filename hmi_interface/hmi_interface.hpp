@@ -23,8 +23,10 @@ protected:
 	static std::unique_ptr<uint8_t[]> packet_to_ptr( std::vector<uart_protocol::packet> &packet_vector, uint16_t& packet_size);
 
 private:
-	static constexpr auto protocol_head_size = sizeof(packet::header[0]) + sizeof(packet::header[1]) + sizeof(packet::packet_type) + sizeof(packet::packet_size);
-	static constexpr auto protocol_all_size = protocol_head_size  + sizeof(packet::checksum);
+	static constexpr uint8_t head_1{0x53} ;
+	static constexpr uint8_t head_2{0x72} ;
+	static constexpr auto protocol_head_size{sizeof(packet::header[0]) + sizeof(packet::header[1]) + sizeof(packet::packet_type) + sizeof(packet::packet_size)};
+	static constexpr auto protocol_all_size {protocol_head_size  + sizeof(packet::checksum)};
 
 	enum class unpack_state {
 		Header1,

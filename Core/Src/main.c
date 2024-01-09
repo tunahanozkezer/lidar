@@ -109,7 +109,6 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 #endif
-//  HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
   vTaskStartScheduler();
   while (1)
   {
