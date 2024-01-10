@@ -12,14 +12,12 @@
 #include <vector>
 #include <memory>
 
-#define DMA_BUFFER 1024
-
 using namespace std;
 
 class dma_ring_buffer
 {
 public:
-	dma_ring_buffer(std::shared_ptr<UART_HandleTypeDef> p_hdma_st, size_t dma_buf_size = DMA_BUFFER);
+	dma_ring_buffer(const std::shared_ptr<UART_HandleTypeDef> &p_hdma_st, size_t dma_buf_size);
 	 std::vector<uint8_t> get_data();
 
 private:

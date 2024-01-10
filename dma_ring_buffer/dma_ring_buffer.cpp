@@ -11,7 +11,7 @@
 #include "dma_ring_buffer.hpp"
 #include "iostream"
 
-dma_ring_buffer::dma_ring_buffer(std::shared_ptr<UART_HandleTypeDef> p_hdma_st, size_t dma_buf_size): p_buffer{std::make_unique<uint8_t[]>(dma_buf_size)}, dma_buf_size_u32 {dma_buf_size}, uart_handle{ p_hdma_st}
+dma_ring_buffer::dma_ring_buffer(const std::shared_ptr<UART_HandleTypeDef> &p_hdma_st, size_t dma_buf_size): p_buffer{std::make_unique<uint8_t[]>(dma_buf_size)}, dma_buf_size_u32 {dma_buf_size}, uart_handle{ p_hdma_st}
 {
 
 	HAL_UART_Receive_DMA(uart_handle.get(), p_buffer.get(), dma_buf_size_u32);

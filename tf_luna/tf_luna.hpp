@@ -81,7 +81,7 @@ public:
 		}
 		else
 		{
-			return 50;
+			return 10;
 		}
 	}
 

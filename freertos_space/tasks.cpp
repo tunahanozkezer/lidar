@@ -38,7 +38,7 @@ void tasks::sensor_task( void * pv_parameters)
 	TickType_t task_frequency{10};
 	TickType_t last_wake_time{xTaskGetTickCount()};
 
-	dma_ring_buffer tf_luna_buffer(std::shared_ptr<UART_HandleTypeDef>(&huart1), 50);
+	dma_ring_buffer tf_luna_buffer(std::shared_ptr<UART_HandleTypeDef>(&huart1), 30);
 	uart_wrapper wrap((std::shared_ptr<UART_HandleTypeDef>(&huart1)));
 	tf_luna<uart_wrapper> luna_ct(wrap);
 
@@ -56,7 +56,7 @@ void tasks::hmi_task( void * pv_parameters)
 	constexpr TickType_t task_frequency{10};
 	TickType_t last_wake_time{xTaskGetTickCount()};
 
-	dma_ring_buffer hmi_buffer(std::shared_ptr<UART_HandleTypeDef>(&huart2), 50);
+	dma_ring_buffer hmi_buffer(std::shared_ptr<UART_HandleTypeDef>(&huart2), 20);
 	uart_wrapper wrap((std::shared_ptr<UART_HandleTypeDef>(&huart2)));
 	hmi_packets<uart_wrapper> hmi_comm(wrap);
 
