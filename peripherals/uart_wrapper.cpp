@@ -6,7 +6,7 @@
  */
 
 
-#include <uart_wrapper.hpp>
+#include "uart_wrapper.hpp"
 
 uart_wrapper::uart_wrapper(std::shared_ptr<UART_HandleTypeDef> huart) :  huart_{huart}, mutex{xSemaphoreCreateMutex()}
 {

@@ -8,10 +8,10 @@
 #ifndef HMI_PACKETS_HPP_
 #define HMI_PACKETS_HPP_
 
-#include <hmi_interface.hpp>
-#include <a4988.hpp>
 #include <cstring>
-#include <tasks.hpp>
+#include "hmi_interface.hpp"
+#include "a4988.hpp"
+#include "tasks.hpp"
 
 extern rtos_ui os_ui;
 template <class uart_type>

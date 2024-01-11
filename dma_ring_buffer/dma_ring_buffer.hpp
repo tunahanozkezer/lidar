@@ -8,11 +8,10 @@
 #ifndef DMA_RING_BUFFER_HPP_
 #define DMA_RING_BUFFER_HPP_
 
-#include "usart.h"
 #include <vector>
 #include <memory>
+#include "usart.h"
 
-using namespace std;
 
 class dma_ring_buffer
 {

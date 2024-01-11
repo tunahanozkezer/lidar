@@ -9,7 +9,6 @@
 
 
 #include "dma_ring_buffer.hpp"
-#include "iostream"
 
 dma_ring_buffer::dma_ring_buffer(const std::shared_ptr<UART_HandleTypeDef> &p_hdma_st, size_t dma_buf_size): p_buffer{std::make_unique<uint8_t[]>(dma_buf_size)}, dma_buf_size_u32 {dma_buf_size}, uart_handle{ p_hdma_st}
 {

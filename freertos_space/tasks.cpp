@@ -5,13 +5,13 @@
  *      Author: tunah
  */
 
-#include <tasks.hpp>
-#include <dma_ring_buffer.hpp>
-#include <tf_luna.hpp>
-#include <task.h>
-#include <a4988.hpp>
-#include <uart_wrapper.hpp>
-#include <hmi_packets.hpp>
+#include "tasks.hpp"
+#include "dma_ring_buffer.hpp"
+#include "tf_luna.hpp"
+#include "task.h"
+#include "a4988.hpp"
+#include "uart_wrapper.hpp"
+#include "hmi_packets.hpp"
 
 uint32_t wave_count{}; // stepper motor clock count. Just here for read. look at "TimerOverflowCallback"
 rtos_ui os_ui;
@@ -39,8 +39,8 @@ void tasks::sensor_task( void * pv_parameters)
 	TickType_t last_wake_time{xTaskGetTickCount()};
 
 	dma_ring_buffer tf_luna_buffer(std::shared_ptr<UART_HandleTypeDef>(&huart1), 30);
-	uart_wrapper wrap((std::shared_ptr<UART_HandleTypeDef>(&huart1)));
-	tf_luna<uart_wrapper> luna_ct(wrap);
+	uart_wrapper uart_send_wrapper((std::shared_ptr<UART_HandleTypeDef>(&huart1)));
+	tf_luna<uart_wrapper> luna_ct(uart_send_wrapper);
 
 	for(;;)
 	{
@@ -57,8 +57,8 @@ void tasks::hmi_task( void * pv_parameters)
 	TickType_t last_wake_time{xTaskGetTickCount()};
 
 	dma_ring_buffer hmi_buffer(std::shared_ptr<UART_HandleTypeDef>(&huart2), 20);
-	uart_wrapper wrap((std::shared_ptr<UART_HandleTypeDef>(&huart2)));
-	hmi_packets<uart_wrapper> hmi_comm(wrap);
+	uart_wrapper uart_send_wrapper((std::shared_ptr<UART_HandleTypeDef>(&huart2)));
+	hmi_packets<uart_wrapper> hmi_comm(uart_send_wrapper);
 
 	for(;;)
 	{

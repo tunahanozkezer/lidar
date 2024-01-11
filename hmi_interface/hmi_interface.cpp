@@ -1,12 +1,13 @@
-#include <hmi_interface.hpp>
 #include <numeric>
 #include <iterator>
+#include "hmi_interface.hpp"
 
 uart_protocol::packet uart_protocol::pack_packet(uint8_t type, const std::vector<uint8_t>& data) {
 
 	auto packet = uart_protocol::packet{
-		{head_1, head_2}, // header
-        type, // packet_type
+		head_1, // header1
+		head_2, // header2
+		type, // packet_type
         static_cast<uint8_t>(data.size()), // packet_size
         data, // payload
         0 // checksum
@@ -20,8 +21,8 @@ std::unique_ptr<uint8_t[]> uart_protocol::packet_to_ptr( const packet &packet, u
 {
 
 	std::unique_ptr<uint8_t[]> packed_packet = std::make_unique<uint8_t[]>(packet.packet_size + protocol_all_size);
-	packed_packet[0] = packet.header[0];
-	packed_packet[1] = packet.header[1];
+	packed_packet[0] = packet.header_1;
+	packed_packet[1] = packet.header_2;
 	packed_packet[2] = packet.packet_type;
 	packed_packet[3] = packet.packet_size;
 	std::copy(packet.payload.begin(), packet.payload.end(), packed_packet.get() + protocol_head_size);
@@ -56,15 +57,15 @@ bool uart_protocol::unpack_packet(const std::vector<uint8_t>& received_data, pac
         auto& data = *it;
 		switch (current_state) {
         case unpack_state::Header1:
-            if (data == 0x53) {
-                unpacked_packet.header[0] = data;
+            if (data == head_1) {
+                unpacked_packet.header_1 = data;
                 current_state = unpack_state::Header2;
             }
             break;
 
         case unpack_state::Header2:
-            if (data == 0x72) {
-                unpacked_packet.header[1] = data;
+            if (data == head_2) {
+                unpacked_packet.header_2 = data;
                 current_state = unpack_state::Type;
             } else {
                 current_state = unpack_state::Header1;
@@ -107,7 +108,8 @@ bool uart_protocol::unpack_packet(const std::vector<uint8_t>& received_data, pac
 }
 
 uint16_t uart_protocol::calculate_checksum(const packet& packet) {
-    uint16_t checksum = std::accumulate(std::begin(packet.header), std::end(packet.header), 0);
+    uint16_t checksum {packet.header_1};
+    checksum += packet.header_2;
     checksum += packet.packet_type;
     checksum += packet.packet_size;
     checksum += std::accumulate(packet.payload.begin(), packet.payload.end(), 0);

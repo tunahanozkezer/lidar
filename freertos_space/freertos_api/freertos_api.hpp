@@ -8,9 +8,9 @@
 #ifndef FREERTOS_API_HPP_
 #define FREERTOS_API_HPP_
 
-#include <FreeRTOS.h>
-#include <task.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
 
 class rtos_task
 {

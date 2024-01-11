@@ -8,10 +8,10 @@
 #ifndef UART_WRAPPER_HPP_
 #define UART_WRAPPER_HPP_
 
-#include <usart.h>
 #include <memory>
-#include <FreeRTOS.h>
-#include <semphr.h>
+#include "usart.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 
 class uart_wrapper {
 

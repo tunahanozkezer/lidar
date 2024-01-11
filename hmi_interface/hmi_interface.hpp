@@ -1,7 +1,6 @@
 #ifndef UART_PROTOCOL_H
 #define UART_PROTOCOL_H
 
-#include <iostream>
 #include <vector>
 #include <memory>
 
@@ -10,7 +9,8 @@ class uart_protocol {
 public:
 
 	struct packet {
-		uint8_t header[2];
+		uint8_t header_1;
+		uint8_t header_2;
 		uint8_t packet_type;
 		uint8_t packet_size;
 		std::vector<uint8_t> payload;
@@ -25,7 +25,7 @@ protected:
 private:
 	static constexpr uint8_t head_1{0x53} ;
 	static constexpr uint8_t head_2{0x72} ;
-	static constexpr auto protocol_head_size{sizeof(packet::header[0]) + sizeof(packet::header[1]) + sizeof(packet::packet_type) + sizeof(packet::packet_size)};
+	static constexpr auto protocol_head_size{sizeof(packet::header_1) + sizeof(packet::header_2) + sizeof(packet::packet_type) + sizeof(packet::packet_size)};
 	static constexpr auto protocol_all_size {protocol_head_size  + sizeof(packet::checksum)};
 
 	enum class unpack_state {

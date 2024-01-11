@@ -8,7 +8,6 @@
 #ifndef TF_LUNA_HPP_
 #define TF_LUNA_HPP_
 
-#include <FreeRTOS.h>
 #include <memory>
 
 enum class packet_id :uint8_t
